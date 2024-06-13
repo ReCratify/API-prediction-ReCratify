@@ -1,22 +1,17 @@
-# import library
 from flask import Flask, request, jsonify
 import tensorflow as tf
 import numpy as np
 from PIL import Image
 import os
-# from tensorflow import keras
-# from keras.models import load_model
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image as tfImage
-
-# from keras import layers, models, optimizers, losses, metrics 
 
 # initiation flask
 app = Flask(__name__)
 
 # initiation tf model
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-model_path = os.path.join(BASE_DIR, 'recratify_model.h5')
+model_path = os.path.join(BASE_DIR, 'models', 'recratify_model.h5')
 
 if not os.path.exists(model_path):
     raise FileNotFoundError(f"Model file not found at {model_path}")
@@ -45,33 +40,36 @@ def waste_prediction():
         image = Image.open(file.stream)
         processed_image = prepare_image(image, size=(224, 224))
         prediction = model.predict(processed_image)[0]
-        # result = prediction[0]
 
         prediction_class = np.argmax(prediction)
 
+        # Updated label mapping to include "Cans" and "Plastic-Bag"
         label_mapping = {
-            0: 'battery',
-            1: 'organic-waste',
-            2: 'brown-glass',
-            3: 'cardbox',
-            4: 'clothes',
-            5: 'green-glass',
-            6: 'metal',
-            7: 'paper',
-            8: 'plastic-bottle',
-            9: 'shoes',
-            10: 'trash',
-            11: 'white-glass'
+            0: 'E-Waste',
+            1: 'Organic-Waste',
+            2: 'Glass',
+            3: 'Cardbox',
+            4: 'Cloth',
+            5: 'Glass',
+            6: 'Metal',
+            7: 'Paper',
+            8: 'Plastic',
+            9: 'Shoes', 
+            10: 'Miscellaneous-Trash',
+            11: 'Glass'
         }
-        label_prediction = label_mapping[prediction_class]
-
+        label_prediction = label_mapping.get(prediction_class, "Unknown")
+        
+        
         confidence = float(prediction[np.argmax(prediction)].item())
+        
+
 
         return jsonify({
             'response': {
                 'error': False,
                 'code': 200,
-                'message': 'Waste successful predict!',
+                'message': 'Waste successfully predicted!',
                 'data': {
                     'label': label_prediction,
                     'confidence': confidence
